@@ -1,0 +1,402 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_HeightMeasurement" Id="{068aacf2-79ff-442c-ae13-d0bbf542e719}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_HeightMeasurement
+VAR_INPUT
+
+	aSensorCurrentValue							: ARRAY[1..4] OF DINT;
+	bEnable										: BOOL;
+	bMeasurementRequest							: BOOL;
+	
+	
+	bSet										: BOOL;
+	aTolerance									: ARRAY[1..4] OF DINT;
+
+	
+	bManualMode									: BOOL;
+	bManualMeasure								: BOOL;
+	bAcknowledge								: BOOL;
+	bFunctionFault								: BOOL;
+	
+	
+	
+	
+END_VAR
+VAR_OUTPUT
+	bBusy										: BOOL;
+	bComplete									: BOOL;
+	bEnableo									: BOOL;
+	wFunctionState								: STRING;
+	nSensorSetPoint								: ARRAY[1..4] OF DINT;
+	aPass										: ARRAY[1..5] OF BOOL; //5 Final Result
+	aFail										: ARRAY[1..5] OF BOOL; //5 Final Result
+	aMinLimit									: ARRAY[1..4] OF DINT;
+	aMaxLimit									: ARRAY[1..4] OF DINT;
+
+	
+END_VAR
+VAR
+	i											: INT;
+	j											: INT;
+	nFunctionProcess							: INT;
+	nReference									: DINT;
+	
+	tonCaseDelay								: ARRAY[0..10] OF TON;
+	rtrigCaseTriger								: ARRAY[0..10] OF R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[ACT_TimTrig();
+
+IF NOT bEnable THEN
+	nFunctionProcess			:= 0;
+	bEnableo					:= FALSE;
+ELSE 
+	bEnableo					:= TRUE;
+END_IF
+
+
+
+
+
+CASE nFunctionProcess OF 
+
+0:
+wFunctionState				:='Function Disabled';
+bBusy						:= FALSE;
+IF bEnable THEN
+	nFunctionProcess		:=1;
+END_IF
+
+1:
+wFunctionState				:='Waiting';
+IF tonCaseDelay[5].Q THEN
+	nFunctionProcess		:=2;
+END_IF
+2:
+j							:= 0;
+ACT_Fault();
+IF bFunctionFault THEN
+	nFunctionProcess		:=50;
+ELSIF bMeasurementRequest THEN
+	nFunctionProcess		:=10;
+ELSIF	bManualMode THEN
+	nFunctionProcess		:=30;
+END_IF
+
+10:
+j							:= 0;
+FOR j:=1 TO 5 DO
+	
+	aPass[j] 				:= FALSE;
+	aFail[j] 				:= FALSE;
+	
+END_FOR
+IF tonCaseDelay[6].Q THEN
+	nFunctionProcess		:=11;
+END_IF
+11:
+wFunctionState				:='Working';
+bBusy						:= TRUE;
+IF tonCaseDelay[0].Q THEN
+	nFunctionProcess		:=13;
+END_IF
+
+13:
+FOR j:=1 TO 4 DO
+	IF aSensorCurrentValue[j] < aMaxLimit[j] AND  aSensorCurrentValue[j] > aMinLimit[j] THEN
+		aPass[j] := TRUE;
+	ELSE aFail[j] := TRUE;
+	END_IF
+END_FOR
+IF tonCaseDelay[1].Q THEN
+	nFunctionProcess		:=14;
+	j						:= 0;
+END_IF
+
+14:
+aPass[5]					:= TRUE;
+aFail[5]					:= FALSE;
+FOR j:=1 TO 4 DO
+IF aFail[j] THEN
+	aPass[5]				:= FALSE;
+	aFail[5]				:= TRUE;
+END_IF
+END_FOR
+IF tonCaseDelay[3].Q THEN
+	nFunctionProcess		:=16;
+END_IF
+
+16:
+wFunctionState				:='Process Complete';
+bComplete					:= TRUE;
+bBusy						:= FALSE;
+j							:= 0;
+IF bAcknowledge  THEN	
+	nFunctionProcess		:=20;
+END_IF
+
+20:
+bComplete	:= FALSE;
+IF tonCaseDelay[2].Q THEN
+	nFunctionProcess		:=1;
+END_IF
+
+30:
+wFunctionState				:='Manual Mode';
+IF bManualMode THEN
+	ACT_Manual();
+ELSIF bFunctionFault THEN
+	nFunctionProcess		:=50;
+ELSE nFunctionProcess		:=1;
+END_IF
+
+
+
+
+50: 
+wFunctionState				:='Error';
+IF tonCaseDelay[4].Q THEN
+	nFunctionProcess		:=1;
+END_IF
+
+
+
+END_CASE
+
+]]></ST>
+    </Implementation>
+    <Action Name="ACT_Fault" Id="{dd5f2a91-7d58-4671-82a8-3d6b14d909e6}">
+      <Implementation>
+        <ST><![CDATA[(*FOR i:=1 TO 5 DO
+	IF aCurrentValueInvalid[i] OR aCurrentValueUnderRange[i] OR aCurrentValueOverRange[i] OR aSensorErrorStatus[i] OR bTerminalErrorStatus THEN 
+
+	bFunctionFault := TRUE;
+	
+	ELSE bFunctionFault := FALSE;
+	
+	END_IF
+
+END_FOR
+IF GVL_MASTER.bFlash1Hz THEN
+	i:=0;
+END_IF*)
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ACT_Manual" Id="{a603d0c8-21db-462b-b2f5-61c009f114aa}">
+      <Implementation>
+        <ST><![CDATA[	
+
+	aMinLimit[1]		:= nSensorSetPoint[1] - aTolerance[1];
+	aMinLimit[2]		:= nSensorSetPoint[2] - aTolerance[2];
+	aMinLimit[3]		:= nSensorSetPoint[3] - aTolerance[3];
+	aMinLimit[4]		:= nSensorSetPoint[4] - aTolerance[4];
+	
+	aMaxLimit[1]		:= nSensorSetPoint[1] + aTolerance[1];
+	aMaxLimit[2]		:= nSensorSetPoint[2] + aTolerance[2];
+	aMaxLimit[3]		:= nSensorSetPoint[3] + aTolerance[3];
+	aMaxLimit[4]		:= nSensorSetPoint[4] + aTolerance[4];
+
+IF bSet THEN
+	
+	nSensorSetPoint[1] 	:= aSensorCurrentValue[1];
+	nSensorSetPoint[2] 	:= aSensorCurrentValue[2];
+	nSensorSetPoint[3] 	:= aSensorCurrentValue[3];
+	nSensorSetPoint[4] 	:= aSensorCurrentValue[4];
+	
+
+	
+END_IF
+
+IF bManualMeasure THEN
+	aPass[5]					:= TRUE;
+	aFail[5]					:= FALSE;
+	FOR j:=1 TO 4 DO
+		IF aSensorCurrentValue[j] <= aMaxLimit[j] AND  aSensorCurrentValue[j] >= aMinLimit[j] THEN
+			aPass[j] := TRUE;
+			aFail[j] := FALSE;
+		ELSE 
+			aFail[j] := TRUE;
+			aPass[j] := FALSE;
+			
+		END_IF
+		IF aFail[j] THEN
+		aPass[5]				:= FALSE;
+		aFail[5]				:= TRUE;
+		END_IF
+	END_FOR
+	
+
+	
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ACT_TimTrig" Id="{6a19913a-a816-4bfe-a146-bb743b608325}">
+      <Implementation>
+        <ST><![CDATA[tonCaseDelay[0](IN:= nFunctionProcess = 11,PT:=T#3S);
+tonCaseDelay[1](IN:= nFunctionProcess = 13,PT:=T#1S);
+tonCaseDelay[2](IN:= nFunctionProcess = 20,PT:=T#1S);
+tonCaseDelay[3](IN:= nFunctionProcess = 14,PT:=T#1S);
+tonCaseDelay[4](IN:= nFunctionProcess = 50 AND NOT bFunctionFault,PT:=T#1S);
+tonCaseDelay[5](IN:= nFunctionProcess = 1,PT:=T#1S);
+tonCaseDelay[6](IN:=nFunctionProcess = 10 ,PT:=T#1S);
+tonCaseDelay[7](IN:= ,PT:=T#2S);
+
+//rtrigCaseTriger[0]();
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_HeightMeasurement">
+      <LineId Id="181" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="56" Count="2" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="60" Count="1" />
+      <LineId Id="235" Count="2" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="62" Count="1" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="212" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="310" Count="5" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="316" Count="3" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="115" Count="2" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="140" Count="2" />
+      <LineId Id="138" Count="1" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="188" Count="1" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="185" Count="1" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="195" Count="2" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="148" Count="1" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="159" Count="1" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="164" Count="2" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="220" Count="2" />
+      <LineId Id="224" Count="2" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="206" Count="2" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="27" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_HeightMeasurement.ACT_Fault">
+      <LineId Id="2" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="11" Count="8" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_HeightMeasurement.ACT_Manual">
+      <LineId Id="55" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="56" Count="6" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="1" Count="1" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="41" Count="1" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="13" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_HeightMeasurement.ACT_TimTrig">
+      <LineId Id="2" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="11" Count="1" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

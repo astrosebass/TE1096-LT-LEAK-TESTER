@@ -1,0 +1,154 @@
+<div id="Statistics" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1280" data-tchmi-height="506" data-tchmi-creator-viewport-width="800" data-tchmi-creator-viewport-height="600">
+<div id="TcHmiTextblock_9062" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="35" data-tchmi-height-unit="px" data-tchmi-left="46" data-tchmi-left-unit="px" data-tchmi-text="Piece:" data-tchmi-top="159" data-tchmi-top-unit="px" data-tchmi-width="110" data-tchmi-width-unit="px" data-tchmi-word-wrap="True" data-tchmi-right-unit="px" data-tchmi-bottom-unit="px" data-tchmi-text-font-size-unit="px" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-font-size="22" data-tchmi-zindex="103">
+</div>
+<div id="SensorValSta_27" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="166" data-tchmi-left-unit="px" data-tchmi-target-user-control="User Control/SensorValSta.usercontrol" data-tchmi-top="156" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-zindex="8" data-tchmi-stextdata="%s%PLC1.GVL_PERSIST.stPartsInspection::nPartsGood%/s%">
+</div>
+<div id="SensorValSta_28" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="316" data-tchmi-left-unit="px" data-tchmi-target-user-control="User Control/SensorValSta.usercontrol" data-tchmi-top="156" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-zindex="8" data-tchmi-stextdata="%s%PLC1.GVL_PERSIST.stPartsInspection::nPartsFailed%/s%">
+</div>
+<div id="SensorValSta_29" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="618" data-tchmi-left-unit="px" data-tchmi-target-user-control="User Control/SensorValSta.usercontrol" data-tchmi-top="156" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-zindex="8" data-tchmi-stextdata="%s%PLC1.GVL_PERSIST.stPartsInspection::nTotalPartsFailed%/s%">
+</div>
+<div id="TcHmiButton_42" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="768" data-tchmi-left-unit="px" data-tchmi-text="RESET" data-tchmi-top="156" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="30" data-tchmi-zindex="1">
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(71, 197, 33, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_42.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%s%PLC1.GVL_HMI_GLOBAL.bResetGoodParts%/s%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/BOOL",
+          "value": true
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-access-config" type="application/json">
+[
+  {
+    "accessright": "operate",
+    "group": "Administrator",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "Engineer",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "Operator",
+    "permission": "Deny"
+  }
+]
+</script>
+</div>
+<div id="TcHmiTextblock_9063" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="35" data-tchmi-height-unit="px" data-tchmi-left="173" data-tchmi-left-unit="px" data-tchmi-text="Good parts" data-tchmi-top="83" data-tchmi-top-unit="px" data-tchmi-width="110" data-tchmi-width-unit="px" data-tchmi-word-wrap="True" data-tchmi-right-unit="px" data-tchmi-bottom-unit="px" data-tchmi-text-font-size-unit="px" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-font-size="22" data-tchmi-zindex="103" data-tchmi-background-image-horizontal-alignment="Center" data-tchmi-background-image-vertical-alignment="Center">
+</div>
+<div id="TcHmiTextblock_9064" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="35" data-tchmi-height-unit="px" data-tchmi-left="327" data-tchmi-left-unit="px" data-tchmi-text="Bad parts" data-tchmi-top="83" data-tchmi-top-unit="px" data-tchmi-width="110" data-tchmi-width-unit="px" data-tchmi-word-wrap="True" data-tchmi-right-unit="px" data-tchmi-bottom-unit="px" data-tchmi-text-font-size-unit="px" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-font-size="22" data-tchmi-zindex="103">
+</div>
+<div id="TcHmiTextblock_9065" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="54" data-tchmi-height-unit="px" data-tchmi-left="459" data-tchmi-left-unit="px" data-tchmi-text="Persist Good Parts" data-tchmi-top="74" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-word-wrap="True" data-tchmi-right-unit="px" data-tchmi-bottom-unit="px" data-tchmi-text-font-size-unit="px" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-font-size="22" data-tchmi-zindex="103">
+</div>
+<div id="SensorValSta_36" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="466" data-tchmi-left-unit="px" data-tchmi-target-user-control="User Control/SensorValSta.usercontrol" data-tchmi-top="156" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-zindex="8" data-tchmi-stextdata="%s%PLC1.GVL_PERSIST.stPartsInspection::nTotalPartsGood%/s%">
+</div>
+<div id="TcHmiTextblock_9066" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="54" data-tchmi-height-unit="px" data-tchmi-left="611" data-tchmi-left-unit="px" data-tchmi-text="Persist Bad  Parts" data-tchmi-top="74" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-word-wrap="True" data-tchmi-right-unit="px" data-tchmi-bottom-unit="px" data-tchmi-text-font-size-unit="px" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-font-size="22" data-tchmi-zindex="103">
+</div>
+<div id="TcHmiButton_43" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="1094" data-tchmi-left-unit="px" data-tchmi-text="History" data-tchmi-top="118" data-tchmi-top-unit="px" data-tchmi-width="122" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="1">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_43.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Screen%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/INT",
+          "value": 16
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="TcHmiTextblock_9069" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="54" data-tchmi-height-unit="px" data-tchmi-left="761" data-tchmi-left-unit="px" data-tchmi-text="Reset Good Parts" data-tchmi-top="73" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-word-wrap="True" data-tchmi-right-unit="px" data-tchmi-bottom-unit="px" data-tchmi-text-font-size-unit="px" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-font-size="22" data-tchmi-zindex="103">
+</div>
+<div id="TcHmiButton_51" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="918" data-tchmi-left-unit="px" data-tchmi-text="RESET" data-tchmi-top="156" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="30" data-tchmi-zindex="1">
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(221, 12, 12, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_51.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%s%PLC1.GVL_HMI_GLOBAL.bResetFailedParts%/s%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/BOOL",
+          "value": true
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-access-config" type="application/json">
+[
+  {
+    "accessright": "operate",
+    "group": "Administrator",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "Engineer",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "Operator",
+    "permission": "Deny"
+  }
+]
+</script>
+</div>
+<div id="TcHmiTextblock_9070" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="54" data-tchmi-height-unit="px" data-tchmi-left="911" data-tchmi-left-unit="px" data-tchmi-text="Reset Bad Parts" data-tchmi-top="73" data-tchmi-top-unit="px" data-tchmi-width="140" data-tchmi-width-unit="px" data-tchmi-word-wrap="True" data-tchmi-right-unit="px" data-tchmi-bottom-unit="px" data-tchmi-text-font-size-unit="px" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-font-size="22" data-tchmi-zindex="103">
+</div>
+</div>

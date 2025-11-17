@@ -1,0 +1,659 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_HeightTest" Id="{6aeb4bb9-e84f-4a04-8bcb-52095ae00bed}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_HeightTest
+VAR_INPUT
+	
+	
+	bEnableFunct   : BOOL;
+	bStartMesure   : BOOL;
+	bPuls          : BOOL;
+	bAknwResult    : BOOL;
+	bReference     : ARRAY[1..4] OF BOOL;
+	nRawMesure     : ARRAY[1..4] OF DINT;
+	rSetPoint      : ARRAY[1..4] OF REAL;
+    rTolerance     : ARRAY[1..4] OF REAL;
+
+
+END_VAR
+VAR_OUTPUT
+	
+	rMesureDis     : ARRAY[1..4] OF REAL; // 
+    rMesuredValue  : ARRAY[1..4] OF REAL; // Converted mesure to value Real
+	bMesOutOfToler : ARRAY[1..4] OF BOOL; // Mesure out of Tolerance
+	bMesFuncFault  : BOOL; // Parametore of Inspection not choose
+	bSetPointFault : BOOL;
+	bTolerFault    : BOOL;
+	bWaitToAknw    : BOOL;
+	bBusyMesure    : BOOL;
+	
+END_VAR
+
+VAR_IN_OUT
+    stMesureStat   : ARRAY[0..4] OF ST_MeasureStatistics;
+END_VAR
+
+VAR
+	rRawMesureConv : ARRAY[1..4] OF REAL;
+    nMesureFunc    : UINT;
+	rTolerTempCal  : ARRAY[1..4] OF REAL;
+	nMesureSeq     : INT :=10;
+	nTempSeqStep   : INT;
+	tonSequTim     : ARRAY[1..20] OF Tc2_Standard.TON;
+	rtrigSeqTrig   : ARRAY[1..20] OF Tc2_Standard.R_TRIG;
+	bSetpChanged   : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Conv to mikro m 
+rRawMesureConv[1] := (DINT_TO_REAL(nRawMesure[1]))/10.0;
+rMesuredValue[1]  := rRawMesureConv[1];
+
+rRawMesureConv[2] := (DINT_TO_REAL(nRawMesure[2]))/10.0;
+rMesuredValue[2]  := rRawMesureConv[2];
+
+rRawMesureConv[3] := (DINT_TO_REAL(nRawMesure[3]))/10.0;
+rMesuredValue[3]  := rRawMesureConv[3];
+
+rRawMesureConv[4] := (DINT_TO_REAL(nRawMesure[4]))/10.0;
+rMesuredValue[4]  := rRawMesureConv[4]; 
+
+IF bEnableFunct AND bReference[1] THEN
+   nMesureFunc := 1;
+ELSIF bEnableFunct AND bReference[2] THEN
+   nMesureFunc := 2; 
+ELSIF bEnableFunct AND bReference[3] THEN
+   nMesureFunc := 3;
+ELSIF bEnableFunct AND bReference[4] THEN
+   nMesureFunc := 4;
+ELSE
+   nMesureFunc := 5;  
+END_IF
+
+bWaitToAknw := (nMesureSeq=150) OR (nMesureSeq=250) OR (nMesureSeq=350) OR (nMesureSeq=450);
+
+bSetPointFault:= (rSetPoint[1] = 0) OR (rSetPoint[2] = 0) OR (rSetPoint[3] = 0) OR (rSetPoint[4] = 0);
+bTolerFault:= (rTolerance[1] = 0) OR (rTolerance[1] = 0) OR (rTolerance[3] = 0) OR (rTolerance[4] = 0);
+// Timers and Triggers
+tonSequTim[1](IN:=(nMesureSeq=500) ,PT:= T#100MS);
+tonSequTim[2](IN:=(nMesureSeq=150) ,PT:= T#200MS);
+tonSequTim[3](IN:=(nMesureSeq=250) ,PT:= T#200MS);
+tonSequTim[4](IN:=(nMesureSeq=350) ,PT:= T#200MS);
+tonSequTim[5](IN:=(nMesureSeq=450) ,PT:= T#200MS);
+rtrigSeqTrig[1](CLK:= (bPuls));
+rtrigSeqTrig[2](CLK:=bAknwResult);
+rtrigSeqTrig[3](CLK:=(NOT bEnableFunct));
+//---------------------------
+bSetpChanged:= rtrigSeqTrig[1].Q;
+ 
+IF rtrigSeqTrig[3].Q THEN
+	bMesOutOfToler[1]:= FALSE;
+    bMesOutOfToler[2]:= FALSE;
+	bMesOutOfToler[3]:= FALSE;
+	bMesOutOfToler[4]:= FALSE;
+	nMesureSeq := 10;
+END_IF
+
+bBusyMesure:= bEnableFunct  AND nMesureSeq>10 AND nMesureSeq<500;
+CASE  nMesureSeq OF
+10:
+   IF nMesureFunc = 1 AND bStartMesure THEN
+	nTempSeqStep:= 10;
+	nMesureSeq := 100;
+ELSIF nMesureFunc = 2 AND bStartMesure THEN
+	nTempSeqStep:= 10;
+	nMesureSeq := 200;
+ELSIF nMesureFunc = 3 AND bStartMesure THEN
+	nTempSeqStep:= 10;
+	nMesureSeq := 300;
+ELSIF nMesureFunc = 4 AND bStartMesure THEN
+	nTempSeqStep:= 10;
+	nMesureSeq := 400;
+ELSIF nMesureFunc = 5 AND bStartMesure THEN
+	nTempSeqStep:= 10;
+	nMesureSeq := 500; 	
+END_IF
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE;	
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE;	
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE;	
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 
+//=========================================================================================================
+100: // Variable 1 choose for reference point
+rMesureDis[1] := rSetPoint[1] - rMesuredValue[1]; // Diference  on Distance mesure 1
+IF bSetpChanged THEN
+	nTempSeqStep:= 100;
+	nMesureSeq := 105; 
+END_IF
+105:// If it is in Tolerance
+IF rMesureDis[1]<rSetPoint[1]-rTolerance[1] OR rMesureDis[1]>rSetPoint[1]+rTolerance[1] THEN
+bMesOutOfToler[1]:= TRUE;
+ELSE
+bMesOutOfToler[1]:= FALSE;	
+END_IF
+// Statistic
+IF rMesureDis[1]<rSetPoint[1]-rTolerance[1] THEN
+	stMesureStat[1].bOutLimitMin := TRUE;
+ELSIF rMesureDis[1]>rSetPoint[1]+rTolerance[1] THEN
+	stMesureStat[1].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE; 	
+END_IF
+
+IF bSetpChanged THEN
+	nTempSeqStep:= 105;
+	nMesureSeq := 110; 
+END_IF
+110:// Mesure 2 value 
+rMesureDis[2]:= rMesuredValue[2] - rMesuredValue[1];
+IF bSetpChanged THEN
+	nTempSeqStep:= 110;
+	nMesureSeq := 115; 
+END_IF
+115:// If it is in Tolerance
+IF rMesureDis[2]<rSetPoint[2]-rTolerance[2] OR rMesureDis[2]>rSetPoint[2]+rTolerance[2] THEN
+bMesOutOfToler[2]:= TRUE;
+ELSE
+bMesOutOfToler[2]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[2]<rSetPoint[2]-rTolerance[2] THEN
+	stMesureStat[2].bOutLimitMin := TRUE;
+ELSIF rMesureDis[2]>rSetPoint[2]+rTolerance[2] THEN
+	stMesureStat[2].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 115;
+	nMesureSeq := 120; 
+END_IF
+120: // Mesure 3 value 
+rMesureDis[3]:= rMesuredValue[3] - rMesuredValue[1];
+IF bSetpChanged THEN
+	nTempSeqStep:= 120;
+	nMesureSeq := 125; 
+END_IF
+125:// If it is in Tolerance
+IF rMesureDis[3]<rSetPoint[3]-rTolerance[3] OR rMesureDis[3]>rSetPoint[3]+rTolerance[3] THEN
+bMesOutOfToler[3]:= TRUE;
+ELSE
+bMesOutOfToler[3]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[3]<rSetPoint[3]-rTolerance[3] THEN
+	stMesureStat[3].bOutLimitMin := TRUE;
+ELSIF rMesureDis[3]>rSetPoint[3]+rTolerance[3] THEN
+	stMesureStat[3].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 125;
+	nMesureSeq := 140; 
+END_IF
+140:  // Mesure 4 value 
+rMesureDis[4]:= rMesuredValue[4] - rMesuredValue[1];
+IF bSetpChanged THEN
+	nTempSeqStep:= 140;
+	nMesureSeq := 145; 
+END_IF
+145:// If it is in Tolerance
+IF rMesureDis[4]<rSetPoint[4]-rTolerance[4] OR rMesureDis[4]>rSetPoint[4]+rTolerance[4] THEN
+bMesOutOfToler[4]:= TRUE;
+ELSE
+bMesOutOfToler[4]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[4]<rSetPoint[4]-rTolerance[4] THEN
+	stMesureStat[4].bOutLimitMin := TRUE;
+ELSIF rMesureDis[4]>rSetPoint[4]+rTolerance[4] THEN
+	stMesureStat[4].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 145;
+	nMesureSeq := 150; 
+END_IF
+150:
+IF  tonSequTim[2].Q AND rtrigSeqTrig[2].Q THEN
+	// Statistic ========================================
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE;	
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE;	
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE;	
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 
+    //===================================================
+	bMesOutOfToler[1]:= FALSE;
+    bMesOutOfToler[2]:= FALSE;
+	bMesOutOfToler[3]:= FALSE;
+	bMesOutOfToler[4]:= FALSE;
+	nTempSeqStep:= 155;
+	nMesureSeq := 160; 
+END_IF
+160:
+IF bSetpChanged THEN
+	nTempSeqStep:= 160;
+	nMesureSeq := 10; 
+END_IF
+//=================================================================================================================
+200: // Variable 2 choose for reference point
+rMesureDis[2] := rSetPoint[2] - rMesuredValue[2]; // Diference  on Distance mesure 1
+IF bSetpChanged THEN
+	nTempSeqStep:= 200;
+	nMesureSeq := 205; 
+END_IF
+205:// If it is in Tolerance
+IF rMesureDis[2]<rSetPoint[2]-rTolerance[2] OR rMesureDis[2]>rSetPoint[2]+rTolerance[2] THEN
+bMesOutOfToler[2]:= TRUE;
+ELSE
+bMesOutOfToler[2]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[2]<rSetPoint[2]-rTolerance[2] THEN
+	stMesureStat[2].bOutLimitMin := TRUE;
+ELSIF rMesureDis[2]>rSetPoint[2]+rTolerance[2] THEN
+	stMesureStat[2].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 205;
+	nMesureSeq := 210; 
+END_IF
+210:// Mesure 1 value 
+rMesureDis[1]:= rMesuredValue[1] - rMesuredValue[2];
+IF bSetpChanged THEN
+	nTempSeqStep:= 210;
+	nMesureSeq := 215; 
+END_IF
+215:// If it is in Tolerance
+IF rMesureDis[1]<rSetPoint[1]-rTolerance[1] OR rMesureDis[1]>rSetPoint[1]+rTolerance[1] THEN
+bMesOutOfToler[1]:= TRUE;
+ELSE
+bMesOutOfToler[1]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[1]<rSetPoint[1]-rTolerance[1] THEN
+	stMesureStat[1].bOutLimitMin := TRUE;
+ELSIF rMesureDis[1]>rSetPoint[1]+rTolerance[1] THEN
+	stMesureStat[1].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 215;
+	nMesureSeq := 220; 
+END_IF
+220: // Mesure 3 value 
+rMesureDis[3]:= rMesuredValue[3] - rMesuredValue[2];
+IF bSetpChanged THEN
+	nTempSeqStep:= 220;
+	nMesureSeq := 225; 
+END_IF
+225:// If it is in Tolerance
+IF rMesureDis[3]<rSetPoint[3]-rTolerance[3] OR rMesureDis[3]>rSetPoint[3]+rTolerance[3] THEN
+bMesOutOfToler[3]:= TRUE;
+ELSE
+bMesOutOfToler[3]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[3]<rSetPoint[3]-rTolerance[3] THEN
+	stMesureStat[3].bOutLimitMin := TRUE;
+ELSIF rMesureDis[3]>rSetPoint[3]+rTolerance[3] THEN
+	stMesureStat[3].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 225;
+	nMesureSeq := 240; 
+END_IF
+240:  // Mesure 4 value 
+rMesureDis[4]:= rMesuredValue[4] - rMesuredValue[2];
+IF bSetpChanged THEN
+	nTempSeqStep:= 240;
+	nMesureSeq := 245; 
+END_IF
+245:// If it is in Tolerance
+IF rMesureDis[4]<rSetPoint[4]-rTolerance[4] OR rMesureDis[4]>rSetPoint[4]+rTolerance[4] THEN
+bMesOutOfToler[4]:= TRUE;
+ELSE
+bMesOutOfToler[4]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[4]<rSetPoint[4]-rTolerance[4] THEN
+	stMesureStat[4].bOutLimitMin := TRUE;
+ELSIF rMesureDis[4]>rSetPoint[4]+rTolerance[4] THEN
+	stMesureStat[4].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 245;
+	nMesureSeq := 250; 
+END_IF
+250:
+IF  tonSequTim[3].Q AND rtrigSeqTrig[2].Q THEN
+	// Statistic ========================================
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE;	
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE;	
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE;	
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 
+    //===================================================	
+	bMesOutOfToler[1]:= FALSE;
+    bMesOutOfToler[2]:= FALSE;
+	bMesOutOfToler[3]:= FALSE;
+	bMesOutOfToler[4]:= FALSE;
+	nTempSeqStep:= 255;
+	nMesureSeq := 260; 
+END_IF
+260:
+IF bSetpChanged THEN
+	nTempSeqStep:= 260;
+	nMesureSeq := 10; 
+END_IF
+//=================================================================================================================
+300: // Variable 3 choose for reference point
+rMesureDis[3] := rSetPoint[3] - rMesuredValue[3]; // Diference  on Distance mesure 1
+IF bSetpChanged THEN
+	nTempSeqStep:= 300;
+	nMesureSeq := 305; 
+END_IF
+305:// If it is in Tolerance
+IF rMesureDis[3]<-rTolerance[3] OR rMesureDis[3]>rTolerance[3] THEN
+bMesOutOfToler[3]:= TRUE;
+ELSE
+bMesOutOfToler[3]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[3]<rSetPoint[3]-rTolerance[3] AND bMesOutOfToler[3] THEN
+	stMesureStat[3].bOutLimitMin := TRUE;
+ELSIF rMesureDis[3]>rSetPoint[3]+rTolerance[3] AND bMesOutOfToler[3] THEN
+	stMesureStat[3].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 305;
+	nMesureSeq := 310; 
+END_IF
+310:// Mesure 2 value 
+rMesureDis[2]:= rMesuredValue[2]- rMesuredValue[3];    
+IF bSetpChanged THEN
+	nTempSeqStep:= 310;
+	nMesureSeq := 315; 
+END_IF
+315:// If it is in Tolerance
+IF rMesureDis[2]<rSetPoint[2]-rTolerance[2] OR rMesureDis[2]>rSetPoint[2]+rTolerance[2] THEN
+bMesOutOfToler[2]:= TRUE;
+ELSE
+bMesOutOfToler[2]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[2]<rSetPoint[2]-rTolerance[2] THEN
+	stMesureStat[2].bOutLimitMin := TRUE;
+ELSIF rMesureDis[2]>rSetPoint[2]+rTolerance[2] THEN
+	stMesureStat[2].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 315;
+	nMesureSeq := 320; 
+END_IF
+320: // Mesure 1 value 
+rMesureDis[1]:= rMesuredValue[1] - rMesuredValue[3];
+IF bSetpChanged THEN
+	nTempSeqStep:= 320;
+	nMesureSeq := 325; 
+END_IF
+325:// If it is in Tolerance
+IF rMesureDis[1]<rSetPoint[1]-rTolerance[1] OR rMesureDis[1]>rSetPoint[1]+rTolerance[1] THEN
+bMesOutOfToler[1]:= TRUE;
+ELSE
+bMesOutOfToler[1]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[1]<rSetPoint[1]-rTolerance[1] THEN
+	stMesureStat[1].bOutLimitMin := TRUE;
+ELSIF rMesureDis[1]>rSetPoint[1]+rTolerance[1] THEN
+	stMesureStat[1].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 325;
+	nMesureSeq := 340; 
+END_IF
+340:  // Mesure 4 value 
+rMesureDis[4]:=  rMesuredValue[4] - rMesuredValue[3];
+IF bSetpChanged THEN
+	nTempSeqStep:= 340;
+	nMesureSeq := 345; 
+END_IF
+345:// If it is in Tolerance
+IF rMesureDis[4]<rSetPoint[4]-rTolerance[4] OR rMesureDis[4]>rSetPoint[4]+rTolerance[4] THEN
+bMesOutOfToler[4]:= TRUE;
+ELSE
+bMesOutOfToler[4]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[4]<rSetPoint[4]-rTolerance[4] THEN
+	stMesureStat[4].bOutLimitMin := TRUE;
+ELSIF rMesureDis[4]>rSetPoint[4]+rTolerance[4] THEN
+	stMesureStat[4].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 345;
+	nMesureSeq := 350; 
+END_IF
+350:
+IF tonSequTim[4].Q AND rtrigSeqTrig[2].Q THEN
+	// Statistic ========================================
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE;	
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE;	
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE;	
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 
+    //===================================================	
+	bMesOutOfToler[1]:= FALSE;
+    bMesOutOfToler[2]:= FALSE;
+	bMesOutOfToler[3]:= FALSE;
+	bMesOutOfToler[4]:= FALSE;
+	nTempSeqStep:= 355;
+	nMesureSeq := 360; 
+END_IF
+360:
+IF bSetpChanged THEN
+	nTempSeqStep:= 360;
+	nMesureSeq := 10; 
+END_IF
+//=================================================================================================================
+400: // Variable 4 choose for reference point
+rMesureDis[4] := rSetPoint[4] - rMesuredValue[4]; // Diference  on Distance mesure 1
+IF bSetpChanged THEN
+	nTempSeqStep:= 400;
+	nMesureSeq := 405; 
+END_IF
+405:// If it is in Tolerance
+IF rMesureDis[4]<rSetPoint[4]-rTolerance[4] OR rMesureDis[4]>rSetPoint[4]+rTolerance[4] THEN
+bMesOutOfToler[4]:= TRUE;
+ELSE
+bMesOutOfToler[4]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[4]<rSetPoint[4]-rTolerance[4] THEN
+	stMesureStat[4].bOutLimitMin := TRUE;
+ELSIF rMesureDis[4]>rSetPoint[4]+rTolerance[4] THEN
+	stMesureStat[4].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 405;
+	nMesureSeq := 410; 
+END_IF
+410:// Mesure 2 value 
+rMesureDis[2]:= rMesuredValue[2] - rMesuredValue[4];
+IF bSetpChanged THEN
+	nTempSeqStep:= 410;
+	nMesureSeq := 415; 
+END_IF
+415:// If it is in Tolerance
+IF rMesureDis[2]<rSetPoint[2]-rTolerance[2] OR rMesureDis[2]>rSetPoint[2]+rTolerance[2] THEN
+bMesOutOfToler[2]:= TRUE;
+ELSE
+bMesOutOfToler[2]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[2]<rSetPoint[2]-rTolerance[2] THEN
+	stMesureStat[2].bOutLimitMin := TRUE;
+ELSIF rMesureDis[2]>rSetPoint[2]+rTolerance[2] THEN
+	stMesureStat[2].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 415;
+	nMesureSeq := 420; 
+END_IF
+420: // Mesure 3 value 
+rMesureDis[3]:= rMesuredValue[3] - rMesuredValue[4];
+IF bSetpChanged THEN
+	nTempSeqStep:= 420;
+	nMesureSeq := 425; 
+END_IF
+425:// If it is in Tolerance
+IF rMesureDis[3]<rSetPoint[3]-rTolerance[3] OR rMesureDis[3]>rSetPoint[3]+rTolerance[3] THEN
+bMesOutOfToler[3]:= TRUE;
+ELSE
+bMesOutOfToler[3]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[3]<rSetPoint[3]-rTolerance[3] THEN
+	stMesureStat[3].bOutLimitMin := TRUE;
+ELSIF rMesureDis[3]>rSetPoint[3]+rTolerance[3] THEN
+	stMesureStat[3].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 425;
+	nMesureSeq := 440; 
+END_IF
+440:  // Mesure 1 value 
+rMesureDis[1]:= rMesuredValue[1] - rMesuredValue[4];
+IF bSetpChanged THEN
+	nTempSeqStep:= 440;
+	nMesureSeq := 445; 
+END_IF
+445:// If it is in Tolerance
+IF rMesureDis[1]<rSetPoint[1]-rTolerance[1] OR rMesureDis[1]>rSetPoint[1]+rTolerance[1] THEN
+bMesOutOfToler[1]:= TRUE;
+ELSE
+bMesOutOfToler[1]:= FALSE;	
+END_IF
+// Statistic ========================================
+IF rMesureDis[1]<rSetPoint[1]-rTolerance[1] THEN
+	stMesureStat[1].bOutLimitMin := TRUE;
+ELSIF rMesureDis[1]>rSetPoint[1]+rTolerance[1] THEN
+	stMesureStat[1].bOutLimitMax := TRUE;
+ELSE
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE; 	
+END_IF
+//===================================================
+IF bSetpChanged THEN
+	nTempSeqStep:= 445;
+	nMesureSeq := 450; 
+END_IF
+450:
+IF  tonSequTim[5].Q AND rtrigSeqTrig[2].Q THEN
+	// Statistic ========================================
+    stMesureStat[1].bOutLimitMin := FALSE;
+    stMesureStat[1].bOutLimitMax := FALSE;	
+    stMesureStat[2].bOutLimitMin := FALSE;
+    stMesureStat[2].bOutLimitMax := FALSE;	
+    stMesureStat[3].bOutLimitMin := FALSE;
+    stMesureStat[3].bOutLimitMax := FALSE;	
+    stMesureStat[4].bOutLimitMin := FALSE;
+    stMesureStat[4].bOutLimitMax := FALSE; 
+    //===================================================	
+	bMesOutOfToler[1]:= FALSE;
+    bMesOutOfToler[2]:= FALSE;
+	bMesOutOfToler[3]:= FALSE;
+	bMesOutOfToler[4]:= FALSE;
+	nTempSeqStep:= 155;
+	nMesureSeq := 160; 
+END_IF
+460:
+IF bSetpChanged THEN
+	nTempSeqStep:= 460;
+	nMesureSeq := 10; 
+END_IF
+//=================================================================================================================
+500: // Allarm on Mesure 
+bMesFuncFault := TRUE;
+IF tonSequTim[1].Q THEN
+   nMesureSeq := 510;
+END_IF
+510:
+bMesFuncFault := FALSE;
+IF NOT bMesFuncFault THEN
+	nMesureSeq := 10;
+END_IF
+	
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HeightTest">
+      <LineId Id="20" Count="603" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

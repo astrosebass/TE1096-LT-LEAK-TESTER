@@ -1,0 +1,108 @@
+<div id="History" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1280" data-tchmi-height="506">
+
+<div id="TcHmiDatagrid_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiDatagrid" data-tchmi-height="480" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="1280" data-tchmi-width-unit="px" data-tchmi-src-data="%s%PLC1.GVL_HMI_GLOBAL.aStatistics%/s%" data-tchmi-grid-font-size="20" data-tchmi-grid-font-style="Normal" data-tchmi-grid-font-weight="Bold">
+
+
+<script data-tchmi-target-attribute="data-tchmi-cell-content-padding" type="application/json">
+{
+  "left": 3,
+  "leftUnit": "px",
+  "right": 3,
+  "rightUnit": "px",
+  "top": 0,
+  "topUnit": "px",
+  "bottom": 0,
+  "bottomUnit": "px"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-src-column" type="application/json">
+[
+  {
+    "name": "sPieceHMI",
+    "label": "PASS/REJECT",
+    "control": "TextBox",
+    "width": 200,
+    "widthUnit": "px",
+    "resize": false,
+    "sortable": false,
+    "minWidth": 100,
+    "minWidthUnit": "px",
+    "textColor": {
+      "color": "rgba(0, 0, 0, 1)"
+    },
+    "editable": false,
+    "horizontalAlignment": "Center",
+    "verticalAlignment": "Center",
+    "headerHorizontalAlignment": "Center",
+    "headerVerticalAlignment": "Center",
+    "ignoreEscapeSequences": false,
+    "autoFocusOut": true,
+    "autoSelectText": false
+  },
+  {
+    "name": "sTime",
+    "label": "Time",
+    "control": "TextBox",
+    "width": 530,
+    "widthUnit": "px",
+    "resize": false,
+    "sortable": false,
+    "minWidth": 100,
+    "minWidthUnit": "px",
+    "textColor": {
+      "color": "rgba(0, 0, 0, 1)"
+    },
+    "editable": false,
+    "horizontalAlignment": "Center",
+    "verticalAlignment": "Center",
+    "headerHorizontalAlignment": "Center",
+    "headerVerticalAlignment": "Center",
+    "ignoreEscapeSequences": false,
+    "autoFocusOut": true,
+    "autoSelectText": false
+  },
+  {
+    "name": "sDate",
+    "label": "Date",
+    "control": "TextBox",
+    "width": 500,
+    "widthUnit": "px",
+    "resize": false,
+    "sortable": false,
+    "minWidth": 100,
+    "minWidthUnit": "px",
+    "textColor": {
+      "color": "rgba(0, 0, 0, 1)"
+    },
+    "editable": false,
+    "horizontalAlignment": "Left",
+    "verticalAlignment": "Center",
+    "headerHorizontalAlignment": "Center",
+    "headerVerticalAlignment": "Center",
+    "ignoreEscapeSequences": false,
+    "autoFocusOut": true,
+    "autoSelectText": false
+  }
+]
+</script>
+
+
+
+
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-row-classes-provider" type="application/json">
+{
+  "objectType": "Function",
+  "active": true,
+  "fn": "TcHmi.Functions.LeakTestersHMI.MyRowClassesProvider",
+  "fnParams": []
+}
+</script>
+</div>
+</div>
