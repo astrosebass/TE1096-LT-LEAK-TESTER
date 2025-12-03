@@ -63,6 +63,9 @@
     <Compile Include="DUTs\ST_Events.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DUTs\ST_Heightlimit.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DUTs\ST_MachineStatusStruct.TcDUT">
       <SubType>Code</SubType>
     </Compile>

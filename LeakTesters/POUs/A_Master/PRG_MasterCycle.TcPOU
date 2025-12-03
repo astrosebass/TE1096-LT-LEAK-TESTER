@@ -34,9 +34,9 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[ACT_LinkIO();
 ACT_TimTrig();
-stStationStruct.bStationInProgress := stStationStruct.nState>=1100 AND stStationStruct.nState<=1600;
+stStationStruct.bStationInProgress := stStationStruct.nState>=1100 AND stStationStruct.nState<=1700;
 
-IF stStationStruct.nState <700 OR (stStationStruct.nState > 1600 AND stStationStruct.nState <4000) OR stStationStruct.nState > 4000 THEN
+IF stStationStruct.nState <700 OR (stStationStruct.nState > 1700 AND stStationStruct.nState <4000) OR stStationStruct.nState > 4000 THEN
 	GVL_HMI_GLOBAL.sActualProcess := ""; 
 	GVL_MASTER.stNest.bPiecePass 	:= FALSE;
 	GVL_MASTER.stNest.bPieceReject 	:= FALSE;
@@ -229,11 +229,11 @@ GVL_MASTER.stNest.sTime := GVL_HMI_GLOBAL.sSystemTime;
 
 IF rtrigCaseTriger [8].Q THEN	
 	
-	FOR i :=200 TO 1 BY (-1) DO
+	FOR i :=200 TO 2 BY (-1) DO
 		GVL_HMI_GLOBAL.aStatistics[i]	:= GVL_HMI_GLOBAL.aStatistics[i-1];
 	END_FOR
 	
-	GVL_HMI_GLOBAL.aStatistics[0] := GVL_MASTER.stNest;
+	GVL_HMI_GLOBAL.aStatistics[1] := GVL_MASTER.stNest;
 END_IF
 
 IF tonCaseTimDelay[11].Q THEN
