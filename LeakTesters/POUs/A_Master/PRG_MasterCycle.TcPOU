@@ -50,7 +50,7 @@ GVL_PERSIST.stPartsInspection.nTotalPartsGood := GVL_PERSIST.stPartsInspection.n
 ELSIF GVL_HMI_GLOBAL.bResetGoodParts THEN
 GVL_PERSIST.stPartsInspection.nPartsGood:=0;	
 END_IF
-
+GVL_HMI_GLOBAL.bResetGoodParts:=FALSE;
 
 IF rtrigCaseTriger[4].Q THEN
 	GVL_PERSIST.stPartsInspection.nPartsFailed:=GVL_PERSIST.stPartsInspection.nPartsFailed+1;
@@ -58,6 +58,7 @@ IF rtrigCaseTriger[4].Q THEN
 ELSIF GVL_HMI_GLOBAL.bResetFailedParts THEN
 	GVL_PERSIST.stPartsInspection.nPartsFailed:=0;
 END_IF
+GVL_HMI_GLOBAL.bResetFailedParts:=FALSE;
 
 IF stStationStruct.nState < 700 THEN
 	 GVL_HMI_GLOBAL.sMessageToOperator := "Press Reset Button to Home Machine";
@@ -405,6 +406,7 @@ ftrigCaseTriger [1](CLK:= biPartPresent );
       <LineId Id="365" Count="0" />
       <LineId Id="387" Count="13" />
       <LineId Id="386" Count="0" />
+      <LineId Id="1014" Count="0" />
       <LineId Id="427" Count="0" />
       <LineId Id="426" Count="0" />
       <LineId Id="428" Count="1" />
